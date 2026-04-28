@@ -1,4 +1,3 @@
-import { GoogleGenAI } from '@google/genai';
 
 export interface TranslationOptions {
   tone?: 'neutral' | 'formal' | 'informal' | 'professional' | 'creative';
@@ -23,6 +22,7 @@ export async function translateContent(
   fileData?: { mimeType: string; data: string; name: string } | null,
   options?: TranslationOptions
 ): Promise<string> {
+  console.log('Translating content via proxy...', { textLength: text.length, hasFile: !!fileData });
   if (!text.trim() && !fileData) return '';
 
   const toneInstruction = options?.tone && options.tone !== 'neutral' 
@@ -77,7 +77,9 @@ The attached file is an image or document that may contain ${isHighPrecision ? '
   }
 
   try {
-    const response = await fetch('/api/translate', {
+    const apiPath = '/api/translate';
+    console.log(`Fetching from: ${apiPath}`);
+    const response = await fetch(apiPath, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
