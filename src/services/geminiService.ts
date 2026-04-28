@@ -93,8 +93,16 @@ The attached file is an image or document that may contain ${isHighPrecision ? '
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.details || errorData.error || 'Server error');
+      let errorMessage = 'Server error';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.details || errorData.error || errorMessage;
+      } catch (e) {
+        // If not JSON, try text
+        const textError = await response.text();
+        errorMessage = textError || response.statusText || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();

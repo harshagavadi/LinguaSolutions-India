@@ -22,21 +22,23 @@ async function startServer() {
     const { contents, model, config } = req.body;
 
     if (!process.env.GEMINI_API_KEY) {
+      console.error('Server Configuration Error: GEMINI_API_KEY is missing');
       return res.status(500).json({ error: 'GEMINI_API_KEY environment variable is not set on the server.' });
     }
 
     try {
-      const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const genModel = genAI.getGenerativeModel({ model: model || 'gemini-3-flash-preview' });
-
-      // Note: SDK structure might differ slightly, using a clean approach
-      // @ts-ignore - The SDK types might be strict about contents structure
-      const result = await genModel.generateContent({
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      
+      // Use the modern SDK pattern as per gemini-api skill
+      const response = await ai.models.generateContent({
+        model: model || 'gemini-3-flash-preview',
         contents,
-        generationConfig: config
+        config: config || {
+          temperature: 0.1,
+        }
       });
 
-      const responseText = result.response.text();
+      const responseText = response.text || '';
       res.json({ text: responseText });
     } catch (error: any) {
       console.error('Proxy Translation Error:', error);
