@@ -1,0 +1,6 @@
+{
+  "name": "LinguaSolutions India",
+  "description": "Professional, AI-powered multilingual translation solutions by LinguaSolutions India",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": []
+}
