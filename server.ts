@@ -21,8 +21,15 @@ async function startServer() {
   app.post('/api/translate', async (req, res) => {
     const { contents, model, config } = req.body;
 
+    console.log('[Proxy] Incoming translation request:', {
+      model,
+      hasContents: !!contents,
+      hasConfig: !!config,
+      contentParts: contents?.parts?.length || (Array.isArray(contents) ? contents.length : 'unknown')
+    });
+
     if (!process.env.GEMINI_API_KEY) {
-      console.error('Server Configuration Error: GEMINI_API_KEY is missing');
+      console.error('[Proxy] Server Configuration Error: GEMINI_API_KEY is missing');
       return res.status(500).json({ error: 'GEMINI_API_KEY environment variable is not set on the server.' });
     }
 
@@ -38,10 +45,15 @@ async function startServer() {
         }
       });
 
+      console.log('[Proxy] AI response received:', {
+        hasText: !!response.text,
+        textLength: response.text?.length
+      });
+
       const responseText = response.text || '';
       res.json({ text: responseText });
     } catch (error: any) {
-      console.error('Proxy Translation Error:', error);
+      console.error('[Proxy] AI Error:', error);
       res.status(500).json({ 
         error: 'Failed to translate content via server proxy.',
         details: error.message 

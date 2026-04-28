@@ -63,13 +63,12 @@ The attached file is an image or document that may contain ${isHighPrecision ? '
 4. Translate the extracted text accurately while maintaining the identified context.`;
   }
 
-  const contents: any[] = [{
-    role: 'user',
+  const contents: any = {
     parts: [{ text: promptText }]
-  }];
+  };
 
   if (fileData) {
-    contents[0].parts.push({
+    contents.parts.push({
       inlineData: {
         data: fileData.data,
         mimeType: fileData.mimeType
@@ -92,21 +91,26 @@ The attached file is an image or document that may contain ${isHighPrecision ? '
       })
     });
 
+    const responseText = await response.text();
+
     if (!response.ok) {
-      let errorMessage = 'Server error';
+      let errorMessage = `Server error (${response.status})`;
       try {
-        const errorData = await response.json();
+        const errorData = JSON.parse(responseText);
         errorMessage = errorData.details || errorData.error || errorMessage;
       } catch (e) {
-        // If not JSON, try text
-        const textError = await response.text();
-        errorMessage = textError || response.statusText || errorMessage;
+        errorMessage = responseText || response.statusText || errorMessage;
       }
       throw new Error(errorMessage);
     }
 
-    const data = await response.json();
-    return data.text || '';
+    try {
+      const data = JSON.parse(responseText);
+      return data.text || '';
+    } catch (e) {
+      console.error('Malformed response:', responseText);
+      throw new Error('Malformed response from server');
+    }
   } catch (error: any) {
     console.error('Translation error:', error);
     throw new Error(error.message || 'Failed to translate content. Please confirm file size is under 20MB and try again.');
